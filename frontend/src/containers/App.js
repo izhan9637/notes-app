@@ -1,37 +1,39 @@
 import React  from 'react';
 import ListNotes from './ListNotes';
 import { Button, Container, Row, Col } from 'reactstrap';
+import AddNoteForm from './AddNoteForm';
 
-const temp_notes = [
-    {
-        'id' : 1,
-        'title' : 'note 1',
-        'content' : 'note 1 content' 
-    },
-    {
-        'id' : 2,
-        'title' : 'note 2',
-        'content' : 'note 2 content' 
-    }, {
-        'id' : 3,
-        'title' : 'note 3',
-        'content' : 'note 3 content' 
-    }
-]
+//import AddNoteForm from './components/AddNoteForm';
+import { fetchNotes, fetchNote, updateNote, addNote } from '../Api';
+//import Websocket from 'react-websocket';
+//import EditNoteForm from './components/EditNoteForm';
+
 
 class App extends React.Component {
 
     constructor(props){
         super(props);
         this.state = {
-            notes : temp_notes,
+            notes : [],
             cur_note_id: 0,
-            is_creating : true
+            is_creating : true,
+            is_fetching: true
         }
 
         this.handleItemClick = this.handleItemClick.bind(this);
         this.handleNote = this.handleNote.bind(this);
+        this.getData = this.getData.bind(this);
+        this.handleSaveNote = this.handleSaveNote.bind(this);
     }
+
+    componentDidMount() {
+        this.getData();
+      }
+    
+      async getData() {
+        let data = await fetchNotes();
+        this.setState({notes: data, is_fetching: false});
+      }
 
     handleNote(){
         this.setState((prevState) => {
@@ -44,6 +46,11 @@ class App extends React.Component {
             return {is_creating: false, cur_note_id: id}
         }); 
     }
+
+    async handleSaveNote(data) {
+        await addNote(data);
+        await this.getData();
+      }
 
     render() {
         return (
@@ -65,10 +72,9 @@ class App extends React.Component {
                             handleItemClick={id => this.handleItemClick(id)} />
                         </Col>
                         <Col xs="8">
-                            <h4>Edit notes here</h4>
                             {
                                 this.state.is_creating ?
-                                "Creating now" :
+                                <AddNoteForm handleSave={this.handleSaveNote} /> :
                                 `Editing note with is ${this.state.cur_note_id}`
                             }
                         </Col>
